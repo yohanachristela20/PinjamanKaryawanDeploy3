@@ -1,34 +1,42 @@
 import { Sequelize } from "sequelize";
+import dotenv from 'dotenv';
+import mysql from "mysql2";
 
-// const db = new Sequelize('peminjaman_karyawan', 'root', '', {
-//     host: 'localhost', 
+dotenv.config();
+
+// const db = new Sequelize("peminjaman_karyawan", "root", "", {
+//     host: "localhost", 
 //     dialect: 'mysql',
 //     timezone: "+07:00", //Indonesian timezone
 //     dialectOptions: {
 //         timezone: "local", 
 //     },
-//     logging: console.log
+//     logging: false,
 // });
 
-const db = new Sequelize("peminjaman_karyawan", "root", "", {
-    host: "localhost", 
+const db = new Sequelize(process.env.DB_DBNAME, process.env.DB_USERNAME, process.env.DB_PASSWORD,{
+    host: process.env.DB_HOST, 
     dialect: 'mysql',
+    port: process.env.DB_PORT,
     timezone: "+07:00", //Indonesian timezone
     dialectOptions: {
         timezone: "local", 
     },
     logging: false,
-
-    //Connection pool -> connecting to the database from multiple process. 
-    // Contoh: cron job untuk potongan angsuran otomatis harus berjalan terus dari sisi backend
-    // tapi di sisi lain, user harus di logout otomatis ketika session berakhir 
-    // Jadi, backend harus nyala terus meskipun user sudah di logout otomatis
-    pool: { 
-        max: 20, // max connection user dalam pool
-        min: 0,  // min connection idle
-        acquire: 120000, // timeout untuk mendapat koneksi: 60 detik
-        idle: 60000 // Idle: to make client connected to db but isn't currently executing any queries
+    pool: {
+        max: 5,
+        min: 0,
+        acquire: 120000,
+        idle: 60000
     }
 });
+
+try {
+    await db.authenticate();
+    console.log("Database connection succesfully!");
+    console.log(process.env.DB_HOST, process.env.DB_USERNAME, process.env.DB_PASSWORD, process.env.DB_DBNAME, process.env.DB_PORT);
+} catch (error) {
+    console.error("Database connection failed: ", error);
+}
 
 export default db; 
